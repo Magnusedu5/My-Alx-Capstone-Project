@@ -5,14 +5,13 @@ from .models import Document, Result, Department
 CustomUser = get_user_model()
 
 
-# 🔑 User Serializer
+
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'role', 'department']
 
 
-# 📄 Document Serializer
 class DocumentSerializer(serializers.ModelSerializer):
     uploaded_by = serializers.StringRelatedField(read_only=True)
 
@@ -21,7 +20,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# 🧾 Result Serializer
 class ResultSerializer(serializers.ModelSerializer):
     uploaded_by = serializers.StringRelatedField(read_only=True)
 
@@ -29,8 +27,6 @@ class ResultSerializer(serializers.ModelSerializer):
         model = Result
         fields = '__all__'
 
-
-# 🏛️ Department Serializer
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
