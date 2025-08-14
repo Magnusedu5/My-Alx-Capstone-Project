@@ -43,7 +43,7 @@ from rest_framework import status
 from .models import Result, Document
 from .serializer import ResultSerializer, DocumentSerializer
 from rest_framework.filters import SearchFilter, OrderingFilter
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 
 
 
@@ -123,13 +123,18 @@ def uploadresult(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 '''
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
+from .forms import ResultUploadForm
+
 def uploadresult(request):
-    serializer = ResultSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save(uploaded_by=request.user)  # Auto set uploader
-        return Response(serializer.data, status=201)
-    return Response(serializer.errors, status=400)
+    if request.method == 'POST':
+        form = ResultUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return render(request, 'upload_result.html', {
+                'form': ResultUploadForm(), 
+                'success': True
+            })
+    else:
+        form = ResultUploadForm()
 
-
+    return render(request, 'upload_result.html', {'form': form})

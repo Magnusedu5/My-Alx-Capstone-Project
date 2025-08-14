@@ -5,7 +5,7 @@
     <style>
         table {
             border-collapse: collapse;
-            width: 80%;
+            width: 100%;
             margin-top: 20px;
         }
         th, td {
@@ -25,7 +25,7 @@
         <select name="session">
             <option value="">Select session</option>
             {% for s in sessions %}
-                <option value="{{ s }}" {% if request.GET.session == s %}selected{% endif %}>{{ s }}</option>
+                <option value="{{ s }}">{{ s }}</option>
             {% endfor %}
         </select>
 
@@ -33,7 +33,7 @@
         <select name="semester">
             <option value="">Select semester</option>
             {% for sem in semesters %}
-                <option value="{{ sem }}" {% if request.GET.semester == sem %}selected{% endif %}>{{ sem }}</option>
+                <option value="{{ sem }}">{{ sem }}</option>
             {% endfor %}
         </select>
 
@@ -41,7 +41,7 @@
         <select name="course_code">
             <option value="">Select course code</option>
             {% for c in course_codes %}
-                <option value="{{ c }}" {% if request.GET.course_code == c %}selected{% endif %}>{{ c }}</option>
+                <option value="{{ c }}">{{ c }}</option>
             {% endfor %}
         </select>
 
@@ -56,9 +56,8 @@
                     <th>Student Name</th>
                     <th>Matric Number</th>
                     <th>Score</th>
-                    <th>Session</th>
-                    <th>Semester</th>
-                    <th>Course Code</th>
+                    <th>Grade</th>
+                    <th>File</th>
                 </tr>
             </thead>
             <tbody>
@@ -67,15 +66,16 @@
                         <td>{{ r.student_name }}</td>
                         <td>{{ r.matric_number }}</td>
                         <td>{{ r.score }}</td>
-                        <td>{{ r.session }}</td>
-                        <td>{{ r.semester }}</td>
-                        <td>{{ r.course_code }}</td>
+                        <td>{{ r.grade }}</td>
+                        <td>
+                            <a href="{{ r.file.url }}" target="_blank">
+                                View File
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% elif request.GET.session or request.GET.semester or request.GET.course_code %}
-        <p>No results found for the selected filters.</p>
     {% endif %}
 </body>
 </html>
