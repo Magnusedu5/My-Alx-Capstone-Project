@@ -42,14 +42,45 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import Result, Document
 from .serializer import ResultSerializer, DocumentSerializer
+from rest_framework.filters import SearchFilter, OrderingFilter
+from django.shortcuts import render
 
 
 
 @api_view(['GET'])
 def getresult(request):
+    session = request.GET.get('session')
+    semester = request.GET.get('semester')
+    course_code = request.GET.get('course_code')
+
     results = Result.objects.all()
+
+    #for filtering through results lists in database
+    if session:
+        results = results.filter(session=session)
+    if semester:
+        results = results.filter(semester=semester)
+    if course_code:
+        results = results.filter(course_code=course_code)
+
+   
+
+    # For populating dropdowns
+    sessions = Result.objects.values_list('session', flat=True).distinct()
+    semesters = Result.objects.values_list('semester', flat=True).distinct()
+    course_codes = Result.objects.values_list('course_code', flat=True).distinct()
+
     serializer = ResultSerializer(results, many=True)
-    return Response(serializer.data)
+
+    parameters = {
+        'results': results,
+        'sessions': sessions,
+        'semesters': semesters,
+        'course_codes': course_codes
+    }
+
+    return render(request, '/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/results/results.html', parameters)
+
 
 '''
 @api_view(['POST'])
@@ -100,3 +131,5 @@ def uploadresult(request):
         serializer.save(uploaded_by=request.user)  # Auto set uploader
         return Response(serializer.data, status=201)
     return Response(serializer.errors, status=400)
+
+

@@ -14,7 +14,7 @@ class CustomUser(AbstractUser):
         ('HOD', 'Head of Department'),
         ('STAFF', 'Staff')
     )
-    id = models.IntegerField(max_length=10, default=0)
+    id = models.IntegerField(default=0)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     name = models.CharField(max_length=50)
     staff_email = models.EmailField(primary_key=True)
@@ -31,15 +31,34 @@ class Result(models.Model):
         ('REJECTED', 'Rejected'),
     )
 
+    SESSION_CHOICES = [
+        ('2024/2025', '2024/2025'),
+        ('2023/2024', '2023/2024'),
+        # add more if you want static choices
+    ]
+
+    SEMESTER_CHOICES = [
+        ('First', 'First'),
+        ('Second', 'Second'),
+    ]
+
+
+
     course_code = models.CharField(max_length=10, primary_key=True)
     course_title = models.CharField(max_length=100)
-    session = models.CharField(max_length=10)
-    semester = models.CharField(max_length=10)
+    session = models.CharField(max_length=10, choices=SESSION_CHOICES)
+    semester = models.CharField(max_length=10, choices=SEMESTER_CHOICES)
     upload_date = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=100, choices=STATUS_CHOICES, default='PENDING')
+    file = models.FileField(upload_to='results/', default= '/home/magnus/Downloads/results.pdf')
+
 
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='uploaded_results')
+
+
+    def __str__(self):
+        return f"{self.session} - {self.semester} - {self.course_code}"
 
 
 class Document(models.Model):
