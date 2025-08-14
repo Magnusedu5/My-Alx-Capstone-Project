@@ -130,11 +130,11 @@ def uploadresult(request):
         form = ResultUploadForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return render(request, 'upload_result.html', {
+            return render(request, 'upload.html', {
                 'form': ResultUploadForm(), 
                 'success': True
             })
     else:
         form = ResultUploadForm()
 
-    return render(request, 'upload_result.html', {'form': form})
+    return render(request, '/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/results/upload.html', {'form': form})

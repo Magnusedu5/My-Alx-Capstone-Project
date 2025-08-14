@@ -54,7 +54,7 @@ class Result(models.Model):
     file = models.FileField(upload_to='results/', default= '/home/magnus/Downloads/results.pdf')
 
 
-    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='uploaded_results')
+    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='uploaded_results')
 
 
     def __str__(self):
