@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📤 Upload Document</h2>
+
+    <!-- Show success or error messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-light">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="title" class="form-label">Document Title</label>
+            <input type="text" name="title" class="form-control" placeholder="Enter document title" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="file" class="form-label">Select File</label>
+            <input type="file" name="file" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Upload</button>
+        <a href="{% url 'documents_list' %}" class="btn btn-secondary">Back to Documents</a>
+    </form>
+</div>
+{% endblock %}

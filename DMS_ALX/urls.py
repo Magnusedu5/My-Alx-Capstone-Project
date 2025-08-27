@@ -2,9 +2,14 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('api/results/list', views.getresult, name='get_results'),
-    path('api/results/upload', views.uploadresult, name='upload_result'),
+    path("login/", views.ApprovedUserLoginView.as_view(), name="login"),
+    path("dashboard/", views.dashboard, name="dashboard"),
 
-    path('api/documents/list', views.getdocument, name='get_documents'),
-    path('api/documents/upload', views.uploaddocument, name='upload_document'),
+    # Results
+    path("results/", views.ResultListView.as_view(), name="results_list"),
+    path("results/upload/", views.ResultUploadView.as_view(), name="results_upload"),
+
+    # Documents
+    path("documents/", views.DocumentListView.as_view(), name="documents_list"),
+    path("documents/upload/", views.DocumentUploadView.as_view(), name="upload_document"),
 ]

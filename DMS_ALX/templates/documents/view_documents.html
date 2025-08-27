@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">📄 Uploaded Documents</h2>
+
+    {% if documents %}
+        <table class="table table-bordered table-hover shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th>File</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ doc.title }}</td>
+                        <td>{{ doc.uploaded_by.name }}</td>
+                        <td>{{ doc.uploaded_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{{ doc.file.url }}" class="btn btn-sm btn-success" download>Download</a>
+                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-info">View</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning">No documents uploaded yet.</div>
+    {% endif %}
+
+    <a href="{% url 'upload_document' %}" class="btn btn-primary">Upload New Document</a>
+</div>
+{% endblock %}

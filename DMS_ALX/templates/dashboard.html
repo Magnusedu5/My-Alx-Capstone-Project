@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    <h2>Dashboard</h2>
+    <p>Welcome, {{ user.name }}! You are logged in as <strong>{{ user.role }}</strong>.</p>
+
+    {% if user.role == "HOD" %}
+        <h3>HOD Actions</h3>
+        <ul>
+            <li><a href="{% url 'approve_users' %}">Approve Staff Accounts</a></li>
+            <li><a href="{% url 'manage_documents' %}">Manage Department Documents</a></li>
+        </ul>
+    {% elif user.role == "STAFF" %}
+        <h3>Staff Actions</h3>
+        <ul>
+            <li><a href="{% url 'upload_document' %}">Upload a Document</a></li>
+            <li><a href="{% url 'documents_list' %}">View My Documents</a></li>
+
+            <li><a href="{% url 'results_list' %}">View Results</a></li>
+            <li><a href="{% url 'results_upload' %}">Upload Results</a></li>
+        </ul>
+    {% endif %}
+{% endblock %}
