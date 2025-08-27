@@ -47,7 +47,9 @@ class DocumentUploadView(LoginRequiredMixin, View):
     def post(self, request):
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            document = form.save(commit=False)   # don’t save yet
+            document.uploaded_by = request.user  # attach current user
+            document.save()
             return redirect("documents_list")
         return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/documents/upload_document.html", {"form": form})
 
