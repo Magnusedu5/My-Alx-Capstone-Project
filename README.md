@@ -31,9 +31,9 @@ Designed for institutions where **staff** can upload results/documents and **HOD
 | GET    | `/api/documents/`  | List all documents                        | ✅            |
 | POST   | `/api/documents/upload`| Upload a new document                     | ✅            |
 | GET    | `/api/results/filter/` | Filter results by session/semester/course | ✅            |
-            |
+✅            |
 | POST   | `/api/login/`| Login                  | ✅        
-            |
+✅            |
 | GET   | `/api/dashboard`| View Dashboard                   | ✅        
 
 
