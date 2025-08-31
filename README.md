@@ -26,12 +26,15 @@ Designed for institutions where **staff** can upload results/documents and **HOD
 🔌 API Endpoints
 | Method | Endpoint               | Description                               | Auth Required |
 | ------ | ---------------------- | ----------------------------------------- | ------------- |
-| GET    | `/api/results/list`    | List all results                          | ✅            |
+| GET    | `/api/results/`    | List all results                          | ✅            |
 | POST   | `/api/results/upload`  | Upload a new result                       | ✅            |
-| GET    | `/api/documents/list`  | List all documents                        | ✅            |
+| GET    | `/api/documents/`  | List all documents                        | ✅            |
 | POST   | `/api/documents/upload`| Upload a new document                     | ✅            |
 | GET    | `/api/results/filter/` | Filter results by session/semester/course | ✅            |
-
+✅            |
+| POST   | `/api/login/`| Login                  | ✅        
+✅            |
+| GET   | `/api/dashboard`| View Dashboard                   | ✅        
 
 
 
