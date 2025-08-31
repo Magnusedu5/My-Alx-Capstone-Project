@@ -9,7 +9,7 @@ class ResultUploadForm(forms.ModelForm):
         model = Result
         fields = ['session', 'semester', 'course_code', 'file']
 
-        
+
 
 class ApprovedUserLoginForm(AuthenticationForm):
     def confirm_login_allowed(self, user):
@@ -25,3 +25,5 @@ class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = Document
         fields = ['title', 'file']
+
+

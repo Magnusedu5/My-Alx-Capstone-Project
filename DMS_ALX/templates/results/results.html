@@ -20,6 +20,12 @@
 </head>
 <body>
     <h1>Filter Student Results</h1>
+    <a href="{% url 'dashboard' %}" 
+   style="display:inline-block; padding:10px 15px; background:#007bff; 
+          color:white; text-decoration:none; border-radius:5px; margin-top:15px;">
+    ⬅ Back to Dashboard
+</a>
+
     <form method="get">
         <label>Session:</label>
         <select name="session">
@@ -53,24 +59,24 @@
         <table>
             <thead>
                 <tr>
-                    <th>Student Name</th>
-                    <th>Matric Number</th>
-                    <th>Score</th>
-                    <th>Grade</th>
+                    <th>Session</th>
+                    <th>Semester</th>
+                    <th>Course Code</th>
                     <th>File</th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in filtered_results %}
                     <tr>
-                        <td>{{ r.student_name }}</td>
-                        <td>{{ r.matric_number }}</td>
-                        <td>{{ r.score }}</td>
-                        <td>{{ r.grade }}</td>
+                        <td>{{ r.session }}</td>
+                        <td>{{ r.semester }}</td>
+                        <td>{{ r.course_code }}</td>
                         <td>
-                            <a href="{{ r.file.url }}" target="_blank">
-                                View File
-                            </a>
+                            {% if r.file %}
+                                <a href="{{ r.file.url }}" target="_blank">View File</a>
+                            {% else %}
+                                No file uploaded
+                            {% endif %}
                         </td>
                     </tr>
                 {% endfor %}

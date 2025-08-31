@@ -15,9 +15,32 @@ def dashboard(request):
 # ---------------- RESULTS ---------------- #
 class ResultListView(LoginRequiredMixin, View):
     def get(self, request):
-        results = Result.objects.all()
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/results/results.html", {"results": results})
+        # Get distinct filter options from the database
+        sessions = Result.objects.values_list("session", flat=True).distinct()
+        semesters = Result.objects.values_list("semester", flat=True).distinct()
+        course_codes = Result.objects.values_list("course_code", flat=True).distinct()
 
+        # Apply filters based on user selection
+        results = Result.objects.all()
+        session = request.GET.get("session")
+        semester = request.GET.get("semester")
+        course_code = request.GET.get("course_code")
+
+        if session:
+            results = results.filter(session=session)
+        if semester:
+            results = results.filter(semester=semester)
+        if course_code:
+            results = results.filter(course_code=course_code)
+
+        context = {
+            "sessions": sessions,
+            "semesters": semesters,
+            "course_codes": course_codes,
+            "filtered_results": results,
+        }
+
+        return render(request, "results/results.html", context)
 
 class ResultUploadView(LoginRequiredMixin, View):
     def get(self, request):
