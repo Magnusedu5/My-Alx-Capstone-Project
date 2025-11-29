@@ -1,87 +1,195 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Get Results</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-<body>
-    <h1>Filter Student Results</h1>
-    <a href="{% url 'dashboard' %}" 
-   style="display:inline-block; padding:10px 15px; background:#007bff; 
-          color:white; text-decoration:none; border-radius:5px; margin-top:15px;">
-    ⬅ Back to Dashboard
-</a>
+{% extends "base.html" %}
 
-    <form method="get">
-        <label>Session:</label>
-        <select name="session">
-            <option value="">Select session</option>
-            {% for s in sessions %}
-                <option value="{{ s }}">{{ s }}</option>
-            {% endfor %}
-        </select>
+{% block title %}Filter Student Results{% endblock %}
 
-        <label>Semester:</label>
-        <select name="semester">
-            <option value="">Select semester</option>
-            {% for sem in semesters %}
-                <option value="{{ sem }}">{{ sem }}</option>
-            {% endfor %}
-        </select>
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="fas fa-filter me-2"></i>
+                Filter Student Results
+            </h2>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
 
-        <label>Course Code:</label>
-        <select name="course_code">
-            <option value="">Select course code</option>
-            {% for c in course_codes %}
-                <option value="{{ c }}">{{ c }}</option>
-            {% endfor %}
-        </select>
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search me-2"></i>Search Filters
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="session" class="form-label">
+                            <i class="fas fa-calendar-alt me-1"></i>Session
+                        </label>
+                        <select name="session" id="session" class="form-select">
+                            <option value="">Select session</option>
+                            {% for s in sessions %}
+                                <option value="{{ s }}" {% if request.GET.session == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-        <button type="submit">Get Results</button>
-    </form>
+                    <div class="col-md-4">
+                        <label for="semester" class="form-label">
+                            <i class="fas fa-clock me-1"></i>Semester
+                        </label>
+                        <select name="semester" id="semester" class="form-select">
+                            <option value="">Select semester</option>
+                            {% for sem in semesters %}
+                                <option value="{{ sem }}" {% if request.GET.semester == sem %}selected{% endif %}>{{ sem }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-    {% if filtered_results %}
-        <h2>Results:</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Session</th>
-                    <th>Semester</th>
-                    <th>Course Code</th>
-                    <th>File</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in filtered_results %}
-                    <tr>
-                        <td>{{ r.session }}</td>
-                        <td>{{ r.semester }}</td>
-                        <td>{{ r.course_code }}</td>
-                        <td>
-                            {% if r.file %}
-                                <a href="{{ r.file.url }}" target="_blank">View File</a>
-                            {% else %}
-                                No file uploaded
-                            {% endif %}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
-</body>
-</html>
+                    <div class="col-md-4">
+                        <label for="course_code" class="form-label">
+                            <i class="fas fa-book me-1"></i>Course Code
+                        </label>
+                        <select name="course_code" id="course_code" class="form-select">
+                            <option value="">Select course code</option>
+                            {% for c in course_codes %}
+                                <option value="{{ c }}" {% if request.GET.course_code == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Get Results
+                        </button>
+                        <a href="{% url 'results_list' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-undo me-2"></i>Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if filtered_results %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>Results Found: {{ filtered_results|length }}
+                </h5>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Click on any file to view or download
+                </small>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">
+                                    <i class="fas fa-calendar me-1"></i>Session
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-clock me-1"></i>Semester
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-book me-1"></i>Course Code
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-graduation-cap me-1"></i>Course Title
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-user me-1"></i>Uploaded By
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-calendar-plus me-1"></i>Upload Date
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-check-circle me-1"></i>Status
+                                </th>
+                                <th scope="col">
+                                    <i class="fas fa-file me-1"></i>File
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in filtered_results %}
+                                <tr>
+                                    <td>{{ r.session }}</td>
+                                    <td>{{ r.semester }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ r.course_code }}</span>
+                                    </td>
+                                    <td>{{ r.course_title|default:"N/A" }}</td>
+                                    <td>
+                                        <i class="fas fa-user-circle me-1"></i>
+                                        {{ r.uploaded_by.name|default:"Unknown" }}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ r.upload_date|date:"M d, Y - H:i" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if r.status == 'APPROVED' %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>Approved
+                                            </span>
+                                        {% elif r.status == 'PENDING' %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock me-1"></i>Pending
+                                            </span>
+                                        {% elif r.status == 'REJECTED' %}
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-times me-1"></i>Rejected
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if r.file %}
+                                            <a href="{{ r.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i>View File
+                                            </a>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>No file
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="card-title">No Results Found</h5>
+                <p class="card-text text-muted">
+                    Try adjusting your search filters or uploading some results first.
+                </p>
+                <a href="{% url 'results_upload' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Upload Results
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

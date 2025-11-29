@@ -3,23 +3,222 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-    <h2>Dashboard</h2>
-    <p>Welcome, {{ user.name }}! You are logged in as <strong>{{ user.role }}</strong>.</p>
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="icon-card">
+                    <i class="fas fa-user-circle"></i>
+                    <h2 class="card-title">Welcome back, {{ user.first_name }} {{ user.last_name }}!</h2>
+                    <p class="card-text text-muted">You are logged in as <span class="badge bg-primary fs-6">{{ user.get_role_display }}</span>
+                    {% if user.department %} in {{ user.department.name }}{% endif %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    {% if user.role == "HOD" %}
-        <h3>HOD Actions</h3>
-        <ul>
-            <li><a href="{% url 'approve_users' %}">Approve Staff Accounts</a></li>
-            <li><a href="{% url 'manage_documents' %}">Manage Department Documents</a></li>
-        </ul>
-    {% elif user.role == "STAFF" %}
-        <h3>Staff Actions</h3>
-        <ul>
-            <li><a href="{% url 'upload_document' %}">Upload a Document</a></li>
-            <li><a href="{% url 'documents_list' %}">View My Documents</a></li>
-
-            <li><a href="{% url 'results_list' %}">View Results</a></li>
-            <li><a href="{% url 'results_upload' %}">Upload Results</a></li>
-        </ul>
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-file-alt fa-2x text-primary mb-2"></i>
+                <h4 class="card-title">{{ my_results }}</h4>
+                <p class="card-text text-muted">My Results</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-2x text-success mb-2"></i>
+                <h4 class="card-title">{{ my_documents }}</h4>
+                <p class="card-text text-muted">My Documents</p>
+            </div>
+        </div>
+    </div>
+    {% if user.role == 'HOD' %}
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h4 class="card-title">{{ pending_results }}</h4>
+                <p class="card-text text-muted">Pending Results</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <i class="fas fa-hourglass-half fa-2x text-info mb-2"></i>
+                <h4 class="card-title">{{ pending_documents }}</h4>
+                <p class="card-text text-muted">Pending Documents</p>
+            </div>
+        </div>
+    </div>
     {% endif %}
+</div>
+
+{% if user.role == "HOD" %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h3 class="mb-4">
+            <i class="fas fa-crown text-warning me-2"></i>
+            Head of Department Actions
+        </h3>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-user-check text-success"></i>
+                <h5 class="card-title">Approve Staff Accounts</h5>
+                <p class="card-text">Review and approve pending staff account registrations.</p>
+                <a href="{% url 'approve_results' %}" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i>Approve Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-file-check text-primary"></i>
+                <h5 class="card-title">Manage Documents</h5>
+                <p class="card-text">Review, approve or reject department documents.</p>
+                <a href="{% url 'approve_documents' %}" class="btn btn-primary">
+                    <i class="fas fa-folder-open me-2"></i>Approve Documents
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-chart-bar text-info"></i>
+                <h5 class="card-title">View All Results</h5>
+                <p class="card-text">Access and filter all student results.</p>
+                <a href="{% url 'results_list' %}" class="btn btn-info">
+                    <i class="fas fa-search me-2"></i>View Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-upload text-warning"></i>
+                <h5 class="card-title">Upload Results</h5>
+                <p class="card-text">Upload new student academic results.</p>
+                <a href="{% url 'upload_result' %}" class="btn btn-warning">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Results
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif user.role == "STAFF" %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h3 class="mb-4">
+            <i class="fas fa-user-tie text-primary me-2"></i>
+            Staff Actions
+        </h3>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-file-upload text-primary"></i>
+                <h5 class="card-title">Upload Document</h5>
+                <p class="card-text">Upload new documents for department review.</p>
+                <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-folder text-success"></i>
+                <h5 class="card-title">My Documents</h5>
+                <p class="card-text">View and manage your uploaded documents.</p>
+                <a href="{% url 'documents_list' %}" class="btn btn-success">
+                    <i class="fas fa-eye me-2"></i>View Documents
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-graduation-cap text-info"></i>
+                <h5 class="card-title">View Results</h5>
+                <p class="card-text">Search and filter student academic results.</p>
+                <a href="{% url 'results_list' %}" class="btn btn-info">
+                    <i class="fas fa-search me-2"></i>View Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center icon-card">
+                <i class="fas fa-plus-circle text-warning"></i>
+                <h5 class="card-title">Upload Results</h5>
+                <p class="card-text">Upload new student academic results.</p>
+                <a href="{% url 'upload_result' %}" class="btn btn-warning">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Results
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Quick Tips
+                </h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            Keep your documents organized with clear titles
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            All uploads are secure and monitored
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Documents require HOD approval
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

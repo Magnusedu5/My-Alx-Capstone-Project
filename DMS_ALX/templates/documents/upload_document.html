@@ -1,34 +1,79 @@
-{% extends 'base.html' %}
-{% load static %}
+{% extends "base.html" %}
+
+{% block title %}Upload Document{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4">📤 Upload Document</h2>
-
-    <!-- Show success or error messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload Document
+                </h5>
             </div>
-        {% endfor %}
-    {% endif %}
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
 
-    <form method="POST" enctype="multipart/form-data" class="border p-4 rounded shadow-sm bg-light">
-        {% csrf_token %}
-        
-        <div class="mb-3">
-            <label for="title" class="form-label">Document Title</label>
-            <input type="text" name="title" class="form-control" placeholder="Enter document title" required>
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            <i class="fas fa-file-text me-2"></i>Document Title
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="fas fa-info-circle me-2"></i>Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">
+                            <i class="fas fa-file me-2"></i>Document File
+                        </label>
+                        {{ form.file }}
+                        {% if form.file.errors %}
+                            <div class="text-danger small">{{ form.file.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            All file types are supported. Maximum file size: 10MB
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'documents_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Documents
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Upload Document
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label for="file" class="form-label">Select File</label>
-            <input type="file" name="file" class="form-control" required>
+        <div class="card mt-4">
+            <div class="card-body bg-light">
+                <h6 class="card-title">
+                    <i class="fas fa-lightbulb me-2"></i>Upload Guidelines
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Choose a descriptive title for easy identification</li>
+                    <li>Add a brief description explaining the document's purpose</li>
+                    <li>Documents will require HOD approval before being published</li>
+                    <li>Ensure documents are properly formatted and readable</li>
+                </ul>
+            </div>
         </div>
-
-        <button type="submit" class="btn btn-primary">Upload</button>
-        <a href="{% url 'documents_list' %}" class="btn btn-secondary">Back to Documents</a>
-    </form>
+    </div>
 </div>
 {% endblock %}

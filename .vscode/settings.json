@@ -1,0 +1,14 @@
+{
+  // Use the project's virtualenv Python interpreter
+  "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+  // Backwards-compatible setting for some VS Code versions
+  "python.pythonPath": "${workspaceFolder}/venv/bin/python",
+
+  // Help Pylance find your app packages (DMS_ALX etc.)
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+
+  // Optional: adjust type checking level (basic is sensible for most projects)
+  "python.analysis.typeCheckingMode": "basic"
+}

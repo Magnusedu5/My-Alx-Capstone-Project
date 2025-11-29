@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Approve Documents{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-folder-open me-2"></i>Pending Documents Approval
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Uploaded By</th>
+                                <th>Upload Date</th>
+                                <th>File</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for document in documents %}
+                            <tr>
+                                <td><strong>{{ document.title }}</strong></td>
+                                <td>{{ document.description|truncatewords:15|default:"No description" }}</td>
+                                <td>{{ document.uploaded_by.get_full_name|default:document.uploaded_by.username }}</td>
+                                <td>{{ document.upload_date|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if document.file %}
+                                        <a href="{{ document.file.url }}" class="btn btn-sm btn-outline-info" target="_blank">
+                                            <i class="fas fa-eye me-1"></i>Preview
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">No file</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="document_id" value="{{ document.id }}">
+                                        <button type="submit" name="action" value="approve"
+                                                class="btn btn-sm btn-success me-1"
+                                                onclick="return confirm('Approve this document?')">
+                                            <i class="fas fa-check me-1"></i>Approve
+                                        </button>
+                                        <button type="submit" name="action" value="reject"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('Reject this document?')">
+                                            <i class="fas fa-times me-1"></i>Reject
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-muted">No pending documents</h5>
+                    <p class="text-muted">All documents have been reviewed.</p>
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body bg-light">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>Review Guidelines
+                </h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-check me-1 text-success"></i>
+                            <strong>Approve:</strong> Document is relevant and properly formatted
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-times me-1 text-danger"></i>
+                            <strong>Reject:</strong> Document is inappropriate or contains errors
+                        </small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">
+                            <i class="fas fa-eye me-1 text-info"></i>
+                            <strong>Preview:</strong> Review the file before making a decision
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

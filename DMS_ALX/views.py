@@ -1,92 +1,221 @@
-from django.shortcuts import render, redirect
-from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Result, Document
-from .forms import ResultUploadForm, DocumentUploadForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
+from django.contrib.auth import logout, authenticate, login
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
+from .models import Result, Document, Session
+from .forms import ResultUploadForm, DocumentUploadForm
+
 
 # Dashboard
+@login_required
 def dashboard(request):
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/dashboard.html")
+    user = request.user
+
+    # Get user statistics
+    my_results = Result.objects.filter(uploaded_by=user).count()
+    my_documents = Document.objects.filter(uploaded_by=user).count()
+
+    # Get pending items for HODs
+    pending_results = 0
+    pending_documents = 0
+
+    if user.role == 'HOD':
+        pending_results = Result.objects.filter(status='PENDING').count()
+        pending_documents = Document.objects.filter(status='PENDING').count()
+
+    context = {
+        'user': user,
+        'my_results': my_results,
+        'my_documents': my_documents,
+        'pending_results': pending_results,
+        'pending_documents': pending_documents,
+    }
+
+    return render(request, "dashboard.html", context)
 
 
-# ---------------- RESULTS ---------------- #
-class ResultListView(LoginRequiredMixin, View):
-    def get(self, request):
-        # Get distinct filter options from the database
-        sessions = Result.objects.values_list("session", flat=True).distinct()
-        semesters = Result.objects.values_list("semester", flat=True).distinct()
-        course_codes = Result.objects.values_list("course_code", flat=True).distinct()
+# Results Views
+@login_required
+def results_list(request):
+    # Get filter options
+    sessions = Session.objects.all()
+    semesters = Result.SEMESTER_CHOICES
 
-        # Apply filters based on user selection
-        results = Result.objects.all()
-        session = request.GET.get("session")
-        semester = request.GET.get("semester")
-        course_code = request.GET.get("course_code")
+    # Start with all results
+    results = Result.objects.all().order_by('-upload_date')
 
-        if session:
-            results = results.filter(session=session)
-        if semester:
-            results = results.filter(semester=semester)
-        if course_code:
-            results = results.filter(course_code=course_code)
+    # Apply filters
+    session_id = request.GET.get('session')
+    semester = request.GET.get('semester')
+    course_code = request.GET.get('course_code')
 
-        context = {
-            "sessions": sessions,
-            "semesters": semesters,
-            "course_codes": course_codes,
-            "filtered_results": results,
-        }
+    if session_id:
+        results = results.filter(session_id=session_id)
+    if semester:
+        results = results.filter(semester=semester)
+    if course_code:
+        results = results.filter(course_code__icontains=course_code)
 
-        return render(request, "results/results.html", context)
+    context = {
+        'results': results,
+        'sessions': sessions,
+        'semesters': semesters,
+        'selected_session': session_id,
+        'selected_semester': semester,
+        'search_course': course_code,
+    }
 
-class ResultUploadView(LoginRequiredMixin, View):
-    def get(self, request):
-        form = ResultUploadForm()
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/results/upload.html", {"form": form})
+    return render(request, 'results/results_list.html', context)
 
-    def post(self, request):
+
+@login_required
+def upload_result(request):
+    if request.method == 'POST':
         form = ResultUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return redirect("results_list")
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/results/upload.html", {"form": form})
+            result = form.save(commit=False)
+            result.uploaded_by = request.user
+            result.save()
+            messages.success(request, 'Result uploaded successfully!')
+            return redirect('results_list')
+    else:
+        form = ResultUploadForm()
+
+    return render(request, 'results/upload_result.html', {'form': form})
 
 
-# ---------------- DOCUMENTS ---------------- #
-class DocumentListView(LoginRequiredMixin, View):
-    def get(self, request):
-        documents = Document.objects.all()
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/documents/view_documents.html", {"documents": documents})
+# Documents Views
+@login_required
+def documents_list(request):
+    documents = Document.objects.all().order_by('-upload_date')
+
+    # Filter by status if requested
+    status = request.GET.get('status')
+    if status:
+        documents = documents.filter(status=status)
+
+    context = {
+        'documents': documents,
+        'status_choices': Document.STATUS_CHOICES,
+        'selected_status': status,
+    }
+
+    return render(request, 'documents/documents_list.html', context)
 
 
-class DocumentUploadView(LoginRequiredMixin, View):
-    def get(self, request):
-        form = DocumentUploadForm()
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/documents/upload_document.html", {"form": form})
-
-    def post(self, request):
+@login_required
+def upload_document(request):
+    if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            document = form.save(commit=False)   # don’t save yet
-            document.uploaded_by = request.user  # attach current user
+            document = form.save(commit=False)
+            document.uploaded_by = request.user
             document.save()
-            return redirect("documents_list")
-        return render(request, "/home/magnus/My_ALX_Project/Alx_Capstone_project/DMS_ALX/templates/documents/upload_document.html", {"form": form})
+            messages.success(request, 'Document uploaded successfully!')
+            return redirect('documents_list')
+    else:
+        form = DocumentUploadForm()
+
+    return render(request, 'documents/upload_document.html', {'form': form})
 
 
-class ApprovedUserLoginView(LoginView):
-    template_name = "registration/login.html"   # path to your login template
+# HOD Approval Views
+@login_required
+def approve_results(request):
+    if request.user.role != 'HOD':
+        messages.error(request, "Access denied. HOD role required.")
+        return redirect('dashboard')
 
-    def form_valid(self, form):
-        user = form.get_user()
-        
-        if hasattr(user, "is_approved") and not user.is_approved:
-            messages.error(self.request, "Your account is not approved yet.")
-            return redirect("login")
-        return super().form_valid(form)
+    pending_results = Result.objects.filter(status='PENDING').order_by('-upload_date')
+
+    if request.method == 'POST':
+        result_id = request.POST.get('result_id')
+        action = request.POST.get('action')
+
+        result = get_object_or_404(Result, id=result_id)
+
+        if action == 'approve':
+            result.status = 'APPROVED'
+            result.save()
+            messages.success(request, f'Result for {result.course_code} approved!')
+        elif action == 'reject':
+            result.status = 'REJECTED'
+            result.save()
+            messages.warning(request, f'Result for {result.course_code} rejected!')
+
+        return redirect('approve_results')
+
+    return render(request, 'hod/approve_results.html', {'results': pending_results})
+
+
+@login_required
+def approve_documents(request):
+    if request.user.role != 'HOD':
+        messages.error(request, "Access denied. HOD role required.")
+        return redirect('dashboard')
+
+    pending_documents = Document.objects.filter(status='PENDING').order_by('-upload_date')
+
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+        action = request.POST.get('action')
+
+        document = get_object_or_404(Document, id=document_id)
+
+        if action == 'approve':
+            document.status = 'APPROVED'
+            document.save()
+            messages.success(request, f'Document "{document.title}" approved!')
+        elif action == 'reject':
+            document.status = 'REJECTED'
+            document.save()
+            messages.warning(request, f'Document "{document.title}" rejected!')
+
+        return redirect('approve_documents')
+
+    return render(request, 'hod/approve_documents.html', {'documents': pending_documents})
+
+
+# Custom Login View (standard Django login)
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'
+    redirect_authenticated_user = True  # Redirect if already authenticated
 
     def get_success_url(self):
-        return reverse_lazy("dashboard")  # dashboard is the name of your urlpattern
+        return reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        # Log successful login
+        print(f"Login successful for user: {form.get_user()}")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Log failed login attempts
+        print(f"Login failed: {form.errors}")
+        return super().form_invalid(form)
+
+
+# Simple Login View
+@csrf_exempt
+def simple_login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'registration/login.html')
+
+# Custom Logout View
+def custom_logout(request):
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('login')
