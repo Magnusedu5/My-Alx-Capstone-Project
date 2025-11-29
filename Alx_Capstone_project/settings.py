@@ -34,6 +34,14 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 default_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in default_hosts.split(',') if h.strip()]
 
+# If running on Render, the external hostname is provided in
+# the `RENDER_EXTERNAL_HOSTNAME` environment variable. Add it to
+# ALLOWED_HOSTS automatically so deployments don't return "Bad Request (400)".
+render_host = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if render_host:
+    if render_host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(render_host)
+
 
 # Application definition
 
