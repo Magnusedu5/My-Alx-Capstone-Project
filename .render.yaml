@@ -1,0 +1,40 @@
+# Render service manifest for Docker deployment
+#
+# This file configures a Docker-based Web Service and a managed Postgres
+# database. After pushing this file to your `main` branch, open the Render
+# dashboard, connect the repository, and Render will use this manifest to
+# create the resources. You still need to set secret values for sensitive
+# environment variables in the Render dashboard (see README_RENDER.md).
+
+services:
+  - type: web
+    name: alx-capstone-backend
+    env: docker
+    branch: main
+    region: oregon
+    plan: starter
+    autoDeploy: true
+    dockerfilePath: Dockerfile
+    # Make sure the build and start behavior matches the Dockerfile/entrypoint
+    startCommand: ./entrypoint.sh
+    envVars:
+      - key: SECRET_KEY
+        value: "__REPLACE_THIS_WITH_A_STRONG_SECRET__"
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: WAIT_FOR_DB
+        value: "true"
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: "admin"
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: "admin@example.com"
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: "__REPLACE_WITH_STRONG_PASSWORD__"
+
+databases:
+  - name: alx-capstone-db
+    plan: starter
+    region: oregon
+    databaseName: alx_capstone_prod

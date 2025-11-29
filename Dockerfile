@@ -1,10 +1,16 @@
-# Stage 1 — build frontend
+# Stage 1 — build frontend (optional). If the repo contains a frontend package.json
+# we'll install dependencies and build with Yarn; otherwise skip this step and
+# rely on an existing `frontend/dist` in the repo (useful for CI or local builds
+# where only the built assets are committed).
 FROM node:20-alpine AS frontend-build
 WORKDIR /app/frontend
-COPY frontend/package.json frontend/yarn.lock ./
-RUN yarn install --frozen-lockfile
 COPY frontend/ .
-RUN yarn build
+# Only run install/build when a package.json exists in the frontend directory.
+RUN if [ -f package.json ]; then \
+			yarn install --frozen-lockfile && yarn build; \
+		else \
+			echo "No frontend package.json found — skipping frontend build"; \
+		fi
 
 # Stage 2 — build python app
 FROM python:3.12-slim

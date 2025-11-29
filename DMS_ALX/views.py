@@ -7,7 +7,45 @@ from django.urls import reverse_lazy
 from django.views.decorators.csrf import csrf_exempt
 from .models import Result, Document, Session
 from .forms import ResultUploadForm, DocumentUploadForm
+from django.http import HttpResponse
+from django.contrib.staticfiles import finders
+from django.conf import settings
+from pathlib import Path
 
+# Custom Login View (standard Django login)
+class CustomLoginView(LoginView):
+    template_name = 'registration/login.html'
+    redirect_authenticated_user = True  # Redirect if already authenticated
+
+    def get_success_url(self):
+        return reverse_lazy('dashboard')
+
+    def form_valid(self, form):
+        # Log successful login
+        print(f"Login successful for user: {form.get_user()}")
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        # Log failed login attempts
+        print(f"Login failed: {form.errors}")
+        return super().form_invalid(form)
+
+
+# Simple Login View
+@csrf_exempt
+def simple_login_view(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'registration/login.html')
 
 # Dashboard
 @login_required
@@ -179,43 +217,49 @@ def approve_documents(request):
     return render(request, 'hod/approve_documents.html', {'documents': pending_documents})
 
 
-# Custom Login View (standard Django login)
-class CustomLoginView(LoginView):
-    template_name = 'registration/login.html'
-    redirect_authenticated_user = True  # Redirect if already authenticated
-
-    def get_success_url(self):
-        return reverse_lazy('dashboard')
-
-    def form_valid(self, form):
-        # Log successful login
-        print(f"Login successful for user: {form.get_user()}")
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        # Log failed login attempts
-        print(f"Login failed: {form.errors}")
-        return super().form_invalid(form)
-
-
-# Simple Login View
-@csrf_exempt
-def simple_login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Invalid username or password.')
-
-    return render(request, 'registration/login.html')
 
 # Custom Logout View
 def custom_logout(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
     return redirect('login')
+
+
+# Serve React index.html from built static files (used in production Docker/Render)
+def serve_react_index(request, path=''):
+    """Return the compiled frontend `index.html` from staticfiles.
+
+    This lets Django serve the SPA for all non-API routes when the frontend
+    build has been copied into STATIC_ROOT (our Dockerfile does this).
+    """
+    # Try staticfiles finders first (works when index is collected into static dirs).
+    # `finders.find` may return a single path or a list of paths depending on
+    # storage backends; normalize to a single string path so `open()` accepts it.
+    index_result = finders.find('index.html')
+    index_path = None
+    if index_result:
+        if isinstance(index_result, (list, tuple)):
+            index_path = index_result[0]
+        else:
+            index_path = index_result
+
+    # If not found, try STATIC_ROOT/index.html (common when collectstatic copied files there)
+    if not index_path and getattr(settings, 'STATIC_ROOT', None):
+        candidate = Path(settings.STATIC_ROOT) / 'index.html'
+        if candidate.exists():
+            index_path = str(candidate)
+
+    # If still not found, try frontend/dist/index.html (useful for local builds)
+    if not index_path:
+        candidate = Path(settings.BASE_DIR) / 'frontend' / 'dist' / 'index.html'
+        if candidate.exists():
+            index_path = str(candidate)
+
+    if not index_path:
+        return HttpResponse('Frontend build not found', status=404)
+
+    try:
+        with open(index_path, 'rb') as f:
+            return HttpResponse(f.read(), content_type='text/html')
+    except Exception as e:
+        return HttpResponse(f'Error reading frontend index: {e}', status=500)

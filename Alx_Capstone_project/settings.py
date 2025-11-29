@@ -19,13 +19,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+import os
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6po!=gz3_tog-eb!_7@z!(x0z!xg_(q&%x=4l7=daw2yhu$!f@'
+# Read from env or fallback to the local development secret (do NOT commit a real secret).
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-6po!=gz3_tog-eb!_7@z!(x0z!xg_(q&%x=4l7=daw2yhu$!f@')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Allow overriding DEBUG via environment variable. Defaults to False for
+# production safety; set the `DEBUG` env var to 'True' or '1' for local dev.
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ["my-alx-capstone-project.onrender.com"]
+# Configure ALLOWED_HOSTS via env var (comma-separated). Default includes localhost for local testing.
+default_hosts = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in default_hosts.split(',') if h.strip()]
 
 
 # Application definition
@@ -122,6 +129,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Use WhiteNoise compressed storage for serving static files in production.
+# `CompressedStaticFilesStorage` is safe to use when `collectstatic` is run
+# and does not require a manifest file (unlike the manifest variant).
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
