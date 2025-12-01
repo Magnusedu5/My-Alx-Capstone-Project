@@ -5,9 +5,11 @@
 import axios from 'axios';
 
 // 🎯 Step 1: Define where our Django API lives
-// For local development, it's at http://localhost:8000
-// Later, we'll change this to your Render URL
-const API_BASE_URL = 'http://localhost:8000/api';
+// Automatically uses production URL in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.MODE === 'production' 
+    ? 'https://my-alx-capstone-project.onrender.com/api'
+    : 'http://localhost:8000/api');
 
 // 🎯 Step 2: Create an axios instance (our "phone")
 // This is pre-configured to talk to our backend
