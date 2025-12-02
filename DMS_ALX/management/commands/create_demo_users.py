@@ -6,14 +6,35 @@ class Command(BaseCommand):
     help = 'Create demo HOD and Staff users (non-interactive)'
 
     def handle(self, *args, **options):
-        if not CustomUser.objects.filter(username='demo_hod').exists():
-            CustomUser.objects.create_user(username='demo_hod', email='hod@demo.local', password='hodpass', role='HOD')
-            self.stdout.write(self.style.SUCCESS('Created demo_hod (password: hodpass)'))
+        # Update existing demo users' passwords or create new ones
+        hod_user, created = CustomUser.objects.get_or_create(
+            username='demo_hod',
+            defaults={'email': 'hod@demo.local', 'role': 'HOD'}
+        )
+        hod_user.set_password('demo123')
+        hod_user.email = 'hod@demo.local'
+        hod_user.role = 'HOD'
+        hod_user.save()
+        
+        if created:
+            self.stdout.write(self.style.SUCCESS('Created demo_hod (Email: hod@demo.local | Password: demo123)'))
         else:
-            self.stdout.write('demo_hod already exists')
+            self.stdout.write(self.style.SUCCESS('Updated demo_hod (Email: hod@demo.local | Password: demo123)'))
 
-        if not CustomUser.objects.filter(username='demo_staff').exists():
-            CustomUser.objects.create_user(username='demo_staff', email='staff@demo.local', password='staffpass', role='STAFF')
-            self.stdout.write(self.style.SUCCESS('Created demo_staff (password: staffpass)'))
+        staff_user, created = CustomUser.objects.get_or_create(
+            username='demo_staff',
+            defaults={'email': 'staff@demo.local', 'role': 'STAFF'}
+        )
+        staff_user.set_password('demo123')
+        staff_user.email = 'staff@demo.local'
+        staff_user.role = 'STAFF'
+        staff_user.save()
+        
+        if created:
+            self.stdout.write(self.style.SUCCESS('Created demo_staff (Email: staff@demo.local | Password: demo123)'))
         else:
-            self.stdout.write('demo_staff already exists')
+            self.stdout.write(self.style.SUCCESS('Updated demo_staff (Email: staff@demo.local | Password: demo123)'))
+        
+        self.stdout.write(self.style.SUCCESS('\n=== Demo Users Ready ==='))
+        self.stdout.write('HOD User:   Email: hod@demo.local   | Password: demo123')
+        self.stdout.write('Staff User: Email: staff@demo.local | Password: demo123')
