@@ -21,7 +21,7 @@ export interface LoginCredentials {
 }
 
 export interface LoginResponse {
-  access: string;
+  token: string;  // Backend returns 'token', not 'access'
   refresh: string;
   user: User;
 }
@@ -31,10 +31,10 @@ export interface LoginResponse {
  */
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>('/login/', credentials);
-  const { access, refresh, user } = response.data;
+  const { token, refresh, user } = response.data;  // Backend uses 'token' key
 
   // Store tokens and user data
-  localStorage.setItem('access_token', access);
+  localStorage.setItem('access_token', token);  // Store 'token' as 'access_token'
   localStorage.setItem('refresh_token', refresh);
   localStorage.setItem('user', JSON.stringify(user));
 
