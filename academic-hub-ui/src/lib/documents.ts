@@ -81,13 +81,6 @@ export const uploadDocument = async (data: UploadDocumentData): Promise<Document
 };
 
 /**
- * Delete a document
- */
-export const deleteDocument = async (id: number): Promise<void> => {
-  await api.delete(`/documents/${id}/`);
-};
-
-/**
  * Get pending documents (HOD only)
  */
 export const getPendingDocuments = async (): Promise<Document[]> => {

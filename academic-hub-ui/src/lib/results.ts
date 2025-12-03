@@ -90,13 +90,6 @@ export const uploadResult = async (data: UploadResultData): Promise<Result> => {
 };
 
 /**
- * Delete a result
- */
-export const deleteResult = async (id: number): Promise<void> => {
-  await api.delete(`/results/${id}/`);
-};
-
-/**
  * Get pending results (HOD only)
  */
 export const getPendingResults = async (): Promise<Result[]> => {
