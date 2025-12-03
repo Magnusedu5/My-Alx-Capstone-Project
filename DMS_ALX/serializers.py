@@ -111,11 +111,12 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
         
         if file_obj:
             try:
-                # Upload to Google Drive
+                # Upload to Google Drive - Documents folder
                 drive_result = upload_to_drive(
                     file_object=file_obj,
                     filename=file_obj.name,
-                    mimetype=file_obj.content_type
+                    mimetype=file_obj.content_type,
+                    folder_type='documents'  # Upload to Academic Hub/Documents
                 )
                 
                 # Store Google Drive information
@@ -126,9 +127,11 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
                 # Clear the file field since we're using Google Drive
                 validated_data['file'] = None
                 
+                print(f"✅ Document '{file_obj.name}' uploaded to Google Drive/Academic Hub/Documents")
+                
             except Exception as e:
                 # If Google Drive upload fails, fall back to local storage
-                print(f"Google Drive upload failed: {e}. Using local storage.")
+                print(f"❌ Google Drive upload failed: {e}. Using local storage.")
         
         return super().create(validated_data)
 
@@ -196,11 +199,12 @@ class ResultUploadSerializer(serializers.ModelSerializer):
         
         if file_obj:
             try:
-                # Upload to Google Drive
+                # Upload to Google Drive - Results folder
                 drive_result = upload_to_drive(
                     file_object=file_obj,
                     filename=file_obj.name,
-                    mimetype=file_obj.content_type
+                    mimetype=file_obj.content_type,
+                    folder_type='results'  # Upload to Academic Hub/Results
                 )
                 
                 # Store Google Drive information
@@ -211,9 +215,11 @@ class ResultUploadSerializer(serializers.ModelSerializer):
                 # Clear the file field since we're using Google Drive
                 validated_data['file'] = None
                 
+                print(f"✅ Result '{file_obj.name}' uploaded to Google Drive/Academic Hub/Results")
+                
             except Exception as e:
                 # If Google Drive upload fails, fall back to local storage
-                print(f"Google Drive upload failed: {e}. Using local storage.")
+                print(f"❌ Google Drive upload failed: {e}. Using local storage.")
 
         return super().create(validated_data)
 

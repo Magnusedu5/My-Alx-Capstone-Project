@@ -19,6 +19,13 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_PATH = os.path.join(settings.BASE_DIR, 'token.pickle')
 CREDENTIALS_PATH = os.path.join(settings.BASE_DIR, 'credentials.json')
 
+# Google Drive Folder IDs for organized storage
+GDRIVE_FOLDERS = {
+    'main': '175BzS-LWAiJPJIZWjnHEvlzfMaBrpCy9',  # Academic Hub
+    'documents': '1RetFGo6aNHhZc-Ay6C4jwlwMOzcTnEpA',  # Academic Hub/Documents
+    'results': '1ntcy0ao2IdG_FPWW71o_ft6Q190Qp5TO',  # Academic Hub/Results
+}
+
 
 class GoogleDriveService:
     """Service class for Google Drive operations"""
@@ -218,20 +225,26 @@ def get_drive_service():
 
 
 # Convenience functions
-def upload_to_drive(file_object, filename, folder_id=None, mimetype=None):
+def upload_to_drive(file_object, filename, folder_id=None, mimetype=None, folder_type=None):
     """
     Upload a file to Google Drive (convenience function)
     
     Args:
         file_object: Django UploadedFile or file-like object
         filename (str): Name for the file
-        folder_id (str): Optional folder ID
+        folder_id (str): Optional folder ID (overrides folder_type)
         mimetype (str): MIME type
+        folder_type (str): Type of folder ('documents' or 'results') - auto-selects folder
         
     Returns:
         dict: File information
     """
     service = get_drive_service()
+    
+    # If folder_type is specified and no folder_id, use predefined folders
+    if folder_type and not folder_id:
+        folder_id = GDRIVE_FOLDERS.get(folder_type)
+    
     return service.upload_file(
         file_object=file_object,
         filename=filename,
