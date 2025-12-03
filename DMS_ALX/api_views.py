@@ -62,8 +62,8 @@ def login_view(request):
         # Serialize user data
         raw_user = UserSerializer(user).data
         user_data = dict(raw_user)
-        # Normalize role to lowercase for frontend consistency
-        user_data['role'] = (user_data.get('role') or '').lower()
+        # Keep role as uppercase for frontend consistency
+        # Frontend expects 'HOD' or 'STAFF', not lowercase
 
         return Response({
             'token': access_token,
@@ -88,7 +88,7 @@ def profile_view(request):
     user = cast(CustomUser, request.user)
     raw_user = UserSerializer(user).data
     user_data = dict(raw_user)
-    user_data['role'] = (user_data.get('role') or '').lower()
+    # Keep role as uppercase (HOD/STAFF)
     return Response(user_data)
 
 
@@ -126,7 +126,7 @@ def dashboard_view(request):
 
     dashboard_data = {
         'user': UserSerializer(user).data,
-        'role': user.role.lower(),
+        'role': user.role,  # Keep as uppercase (HOD/STAFF)
         'total_documents': my_documents,
         'total_results': my_results,
         'recent_uploads': my_documents + my_results,
