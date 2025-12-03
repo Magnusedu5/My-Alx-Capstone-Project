@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, XCircle, Eye, Download } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Upload, CheckCircle, XCircle, Eye, Download, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { getDocuments, approveDocument, rejectDocument, type Document } from "@/lib/documents";
+import { getDocuments, approveDocument, rejectDocument, deleteDocument, bulkDeleteDocuments, type Document } from "@/lib/documents";
 import { isHOD } from "@/lib/auth";
 
 const Documents = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
   const userIsHOD = isHOD();
 
   useEffect(() => {
@@ -97,20 +100,96 @@ const Documents = () => {
     }
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(documents.map(doc => doc.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: number, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter(docId => docId !== id));
+    }
+  };
+
+  const handleDeleteSingle = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this document?')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteDocument(id);
+      toast.success('Document deleted successfully');
+      fetchDocuments();
+    } catch (error) {
+      toast.error('Failed to delete document');
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) {
+      toast.error('Please select documents to delete');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} document(s)?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const result = await bulkDeleteDocuments(selectedIds);
+      toast.success(result.message);
+      if (result.errors && result.errors.length > 0) {
+        result.errors.forEach(error => toast.error(error));
+      }
+      setSelectedIds([]);
+      fetchDocuments();
+    } catch (error) {
+      toast.error('Failed to delete documents');
+      console.error(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Documents</h2>
-            <p className="text-muted-foreground mt-1">Manage and review academic documents</p>
+            <p className="text-muted-foreground mt-1">
+              Manage and review academic documents
+              {selectedIds.length > 0 && ` • ${selectedIds.length} selected`}
+            </p>
           </div>
-          <Button asChild>
-            <Link to="/upload-document">
-              <Upload className="w-4 h-4 mr-2" />
-              Upload Document
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            {selectedIds.length > 0 && (
+              <Button
+                variant="destructive"
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Selected ({selectedIds.length})
+              </Button>
+            )}
+            <Button asChild>
+              <Link to="/upload-document">
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Document
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Documents Table */}
@@ -128,6 +207,12 @@ const Documents = () => {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
+                    <th className="px-4 py-4 text-left">
+                      <Checkbox
+                        checked={selectedIds.length === documents.length && documents.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                       Document Title
                     </th>
@@ -153,6 +238,12 @@ const Documents = () => {
                 <tbody className="divide-y divide-border">
                   {documents.map((doc) => (
                     <tr key={doc.id} className="hover:bg-accent/50 transition-colors">
+                      <td className="px-4 py-4">
+                        <Checkbox
+                          checked={selectedIds.includes(doc.id)}
+                          onCheckedChange={(checked) => handleSelectOne(doc.id, checked as boolean)}
+                        />
+                      </td>
                       <td className="px-6 py-4 text-sm font-medium text-foreground">{doc.title}</td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
                         {doc.uploaded_by.first_name} {doc.uploaded_by.last_name}
@@ -182,6 +273,16 @@ const Documents = () => {
                             title="Download file"
                           >
                             <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteSingle(doc.id)}
+                            disabled={isDeleting}
+                            className="hover:bg-destructive/10 hover:text-destructive"
+                            title="Delete file"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>

@@ -74,7 +74,16 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         """Return the appropriate file URL (Google Drive or local)"""
-        return obj.file_url
+        # Priority: Google Drive > Local file
+        if obj.gdrive_file_url:
+            return obj.gdrive_file_url
+        elif obj.file:
+            # Build absolute URL for local files
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
 
     def create(self, validated_data):
         """
@@ -166,7 +175,16 @@ class ResultSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         """Return the appropriate file URL (Google Drive or local)"""
-        return obj.file_url
+        # Priority: Google Drive > Local file
+        if obj.gdrive_file_url:
+            return obj.gdrive_file_url
+        elif obj.file:
+            # Build absolute URL for local files
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
 
 
 class ResultUploadSerializer(serializers.ModelSerializer):

@@ -51,6 +51,15 @@ export const getDocument = async (id: number): Promise<Document> => {
   return response.data;
 };
 
+export const deleteDocument = async (id: number): Promise<void> => {
+  await api.delete(`/documents/${id}/`);
+};
+
+export const bulkDeleteDocuments = async (ids: number[]): Promise<{ message: string; deleted_count: number; errors: string[] | null }> => {
+  const response = await api.post('/documents/bulk-delete/', { ids });
+  return response.data;
+};
+
 /**
  * Upload a new document
  */

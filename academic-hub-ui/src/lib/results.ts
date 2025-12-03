@@ -58,6 +58,15 @@ export const getResult = async (id: number): Promise<Result> => {
   return response.data;
 };
 
+export const deleteResult = async (id: number): Promise<void> => {
+  await api.delete(`/results/${id}/`);
+};
+
+export const bulkDeleteResults = async (ids: number[]): Promise<{ message: string; deleted_count: number; errors: string[] | null }> => {
+  const response = await api.post('/results/bulk-delete/', { ids });
+  return response.data;
+};
+
 /**
  * Upload a new result
  */

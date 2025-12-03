@@ -409,9 +409,29 @@ class DocumentDeleteView(generics.DestroyAPIView):
     lookup_url_kwarg = 'document_id'
 
     def perform_destroy(self, instance):
+        from .utils.google_drive import delete_from_drive
+        
         user = cast(CustomUser, self.request.user)
         if user.role != 'HOD' and instance.uploaded_by != user:
             raise PermissionDenied('Cannot delete this document')
+        
+        # Delete from Google Drive if file exists there
+        if instance.gdrive_file_id:
+            try:
+                delete_from_drive(instance.gdrive_file_id)
+                print(f"✅ Deleted from Google Drive: {instance.title}")
+            except Exception as e:
+                print(f"⚠️  Failed to delete from Google Drive: {e}")
+        
+        # Delete local file if exists
+        if instance.file:
+            try:
+                instance.file.delete()
+                print(f"✅ Deleted local file: {instance.title}")
+            except Exception as e:
+                print(f"⚠️  Failed to delete local file: {e}")
+        
+        # Delete database record
         instance.delete()
 
 
@@ -426,7 +446,161 @@ class ResultDeleteView(generics.DestroyAPIView):
     lookup_url_kwarg = 'result_id'
 
     def perform_destroy(self, instance):
+        from .utils.google_drive import delete_from_drive
+        
         user = cast(CustomUser, self.request.user)
         if user.role != 'HOD' and instance.uploaded_by != user:
             raise PermissionDenied('Cannot delete this result')
+        
+        # Delete from Google Drive if file exists there
+        if instance.gdrive_file_id:
+            try:
+                delete_from_drive(instance.gdrive_file_id)
+                print(f"✅ Deleted from Google Drive: {instance.course_code}")
+            except Exception as e:
+                print(f"⚠️  Failed to delete from Google Drive: {e}")
+        
+        # Delete local file if exists
+        if instance.file:
+            try:
+                instance.file.delete()
+                print(f"✅ Deleted local file: {instance.course_code}")
+            except Exception as e:
+                print(f"⚠️  Failed to delete local file: {e}")
+        
+        # Delete database record
         instance.delete()
+
+
+# =============================================================================
+# BULK DELETE VIEWS
+# =============================================================================
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def document_bulk_delete_view(request):
+    """
+    POST /api/documents/bulk-delete/
+    
+    Bulk delete multiple documents
+    
+    Request body:
+    {
+        "ids": [1, 2, 3, 4]
+    }
+    
+    Response:
+    {
+        "message": "Successfully deleted 4 document(s)",
+        "deleted_count": 4,
+        "errors": null
+    }
+    """
+    from .utils.google_drive import delete_from_drive
+    
+    document_ids = request.data.get('ids', [])
+    
+    if not document_ids:
+        return Response(
+            {'error': 'No document IDs provided'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    user = cast(CustomUser, request.user)
+    
+    # Get documents (filter by ownership if not HOD)
+    if user.role == 'HOD':
+        documents = Document.objects.filter(id__in=document_ids)
+    else:
+        documents = Document.objects.filter(id__in=document_ids, uploaded_by=user)
+    
+    deleted_count = 0
+    errors = []
+    
+    for doc in documents:
+        try:
+            # Delete from Google Drive
+            if doc.gdrive_file_id:
+                delete_from_drive(doc.gdrive_file_id)
+            
+            # Delete local file
+            if doc.file:
+                doc.file.delete()
+            
+            # Delete database record
+            doc.delete()
+            deleted_count += 1
+            
+        except Exception as e:
+            errors.append(f"Failed to delete {doc.title}: {str(e)}")
+    
+    return Response({
+        'message': f'Successfully deleted {deleted_count} document(s)',
+        'deleted_count': deleted_count,
+        'errors': errors if errors else None
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def result_bulk_delete_view(request):
+    """
+    POST /api/results/bulk-delete/
+    
+    Bulk delete multiple results
+    
+    Request body:
+    {
+        "ids": [1, 2, 3, 4]
+    }
+    
+    Response:
+    {
+        "message": "Successfully deleted 4 result(s)",
+        "deleted_count": 4,
+        "errors": null
+    }
+    """
+    from .utils.google_drive import delete_from_drive
+    
+    result_ids = request.data.get('ids', [])
+    
+    if not result_ids:
+        return Response(
+            {'error': 'No result IDs provided'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    user = cast(CustomUser, request.user)
+    
+    # Get results (filter by ownership if not HOD)
+    if user.role == 'HOD':
+        results = Result.objects.filter(id__in=result_ids)
+    else:
+        results = Result.objects.filter(id__in=result_ids, uploaded_by=user)
+    
+    deleted_count = 0
+    errors = []
+    
+    for result in results:
+        try:
+            # Delete from Google Drive
+            if result.gdrive_file_id:
+                delete_from_drive(result.gdrive_file_id)
+            
+            # Delete local file
+            if result.file:
+                result.file.delete()
+            
+            # Delete database record
+            result.delete()
+            deleted_count += 1
+            
+        except Exception as e:
+            errors.append(f"Failed to delete {result.course_code}: {str(e)}")
+    
+    return Response({
+        'message': f'Successfully deleted {deleted_count} result(s)',
+        'deleted_count': deleted_count,
+        'errors': errors if errors else None
+    }, status=status.HTTP_200_OK)
