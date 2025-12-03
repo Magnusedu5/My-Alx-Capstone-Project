@@ -51,12 +51,26 @@ class Result(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     file = models.FileField(upload_to='results/', blank=True, null=True)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='uploaded_results')
+    
+    # Google Drive fields
+    gdrive_file_id = models.CharField(max_length=255, blank=True, null=True, help_text="Google Drive file ID")
+    gdrive_file_url = models.URLField(blank=True, null=True, help_text="Google Drive file URL")
+    original_filename = models.CharField(max_length=255, blank=True, null=True, help_text="Original uploaded filename")
 
     class Meta:
         unique_together = ['course_code', 'session', 'semester']
 
     def __str__(self):
         return f"{self.course_code} - {self.session} - {self.semester}"
+    
+    @property
+    def file_url(self):
+        """Return Google Drive URL if available, otherwise local file URL"""
+        if self.gdrive_file_url:
+            return self.gdrive_file_url
+        elif self.file:
+            return self.file.url
+        return None
 
 
 class Document(models.Model):
@@ -71,7 +85,21 @@ class Document(models.Model):
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='uploaded_documents')
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
     upload_date = models.DateTimeField(auto_now_add=True)
-    file = models.FileField(upload_to='documents/')
+    file = models.FileField(upload_to='documents/', blank=True, null=True)
+    
+    # Google Drive fields
+    gdrive_file_id = models.CharField(max_length=255, blank=True, null=True, help_text="Google Drive file ID")
+    gdrive_file_url = models.URLField(blank=True, null=True, help_text="Google Drive file URL")
+    original_filename = models.CharField(max_length=255, blank=True, null=True, help_text="Original uploaded filename")
 
     def __str__(self):
         return self.title
+    
+    @property
+    def file_url(self):
+        """Return Google Drive URL if available, otherwise local file URL"""
+        if self.gdrive_file_url:
+            return self.gdrive_file_url
+        elif self.file:
+            return self.file.url
+        return None

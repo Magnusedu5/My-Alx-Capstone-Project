@@ -7,6 +7,9 @@ __pycache__/
 env/
 venv/
 ENV/
+bin/
+include/
+pyvenv.cfg
 build/
 develop-eggs/
 dist/
@@ -38,6 +41,10 @@ logs/
 .env.production
 .env.local
 .env.*.local
+
+# Google Drive credentials
+token.pickle
+credentials.json
 
 # IDE
 .vscode/

@@ -62,12 +62,19 @@ class DocumentSerializer(serializers.ModelSerializer):
     """
     uploaded_by = UserSerializer(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
         fields = ['id', 'title', 'description', 'file', 'status', 'status_display',
-                 'upload_date', 'uploaded_by']
-        read_only_fields = ['id', 'upload_date', 'uploaded_by', 'status']
+                 'upload_date', 'uploaded_by', 'gdrive_file_id', 'gdrive_file_url', 
+                 'original_filename', 'file_url']
+        read_only_fields = ['id', 'upload_date', 'uploaded_by', 'status', 'gdrive_file_id', 
+                           'gdrive_file_url', 'original_filename', 'file_url']
+
+    def get_file_url(self, obj):
+        """Return the appropriate file URL (Google Drive or local)"""
+        return obj.file_url
 
     def create(self, validated_data):
         """
@@ -89,6 +96,8 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
     category = serializers.CharField(required=False, write_only=True)
 
     def create(self, validated_data):
+        from .utils.google_drive import upload_to_drive
+        
         # Remove category from validated_data and add to description
         category = validated_data.pop('category', '')
         if category:
@@ -96,6 +105,31 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
             validated_data['description'] = f"Category: {category}\n{description}".strip()
 
         validated_data['uploaded_by'] = self.context['request'].user
+        
+        # Get the uploaded file
+        file_obj = validated_data.get('file')
+        
+        if file_obj:
+            try:
+                # Upload to Google Drive
+                drive_result = upload_to_drive(
+                    file_object=file_obj,
+                    filename=file_obj.name,
+                    mimetype=file_obj.content_type
+                )
+                
+                # Store Google Drive information
+                validated_data['gdrive_file_id'] = drive_result['id']
+                validated_data['gdrive_file_url'] = drive_result['webViewLink']
+                validated_data['original_filename'] = file_obj.name
+                
+                # Clear the file field since we're using Google Drive
+                validated_data['file'] = None
+                
+            except Exception as e:
+                # If Google Drive upload fails, fall back to local storage
+                print(f"Google Drive upload failed: {e}. Using local storage.")
+        
         return super().create(validated_data)
 
 
@@ -116,13 +150,20 @@ class ResultSerializer(serializers.ModelSerializer):
     session_name = serializers.CharField(source='session.name', read_only=True)
     semester_display = serializers.CharField(source='get_semester_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Result
         fields = ['id', 'course_code', 'course_title', 'session', 'session_name',
                  'semester', 'semester_display', 'file', 'status', 'status_display',
-                 'upload_date', 'updated_at', 'uploaded_by']
-        read_only_fields = ['id', 'upload_date', 'updated_at', 'uploaded_by', 'status']
+                 'upload_date', 'updated_at', 'uploaded_by', 'gdrive_file_id', 
+                 'gdrive_file_url', 'original_filename', 'file_url']
+        read_only_fields = ['id', 'upload_date', 'updated_at', 'uploaded_by', 'status',
+                           'gdrive_file_id', 'gdrive_file_url', 'original_filename', 'file_url']
+
+    def get_file_url(self, obj):
+        """Return the appropriate file URL (Google Drive or local)"""
+        return obj.file_url
 
 
 class ResultUploadSerializer(serializers.ModelSerializer):
@@ -137,6 +178,8 @@ class ResultUploadSerializer(serializers.ModelSerializer):
         fields = ['course_code', 'course_title', 'session', 'semester', 'file', 'level']
 
     def create(self, validated_data):
+        from .utils.google_drive import upload_to_drive
+        
         # Handle session - find or create session by name
         session_name = validated_data.pop('session')
         session, created = Session.objects.get_or_create(name=session_name)
@@ -147,6 +190,30 @@ class ResultUploadSerializer(serializers.ModelSerializer):
 
         # Set the uploaded_by field
         validated_data['uploaded_by'] = self.context['request'].user
+        
+        # Get the uploaded file
+        file_obj = validated_data.get('file')
+        
+        if file_obj:
+            try:
+                # Upload to Google Drive
+                drive_result = upload_to_drive(
+                    file_object=file_obj,
+                    filename=file_obj.name,
+                    mimetype=file_obj.content_type
+                )
+                
+                # Store Google Drive information
+                validated_data['gdrive_file_id'] = drive_result['id']
+                validated_data['gdrive_file_url'] = drive_result['webViewLink']
+                validated_data['original_filename'] = file_obj.name
+                
+                # Clear the file field since we're using Google Drive
+                validated_data['file'] = None
+                
+            except Exception as e:
+                # If Google Drive upload fails, fall back to local storage
+                print(f"Google Drive upload failed: {e}. Using local storage.")
 
         return super().create(validated_data)
 
