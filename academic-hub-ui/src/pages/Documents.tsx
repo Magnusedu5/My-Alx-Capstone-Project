@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, XCircle } from "lucide-react";
+import { Upload, CheckCircle, XCircle, Eye, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getDocuments, approveDocument, rejectDocument, type Document } from "@/lib/documents";
@@ -70,6 +70,33 @@ const Documents = () => {
     return status.toLowerCase() as "pending" | "approved" | "rejected";
   };
 
+  const handleViewFile = (doc: Document) => {
+    const fileUrl = doc.file_url || doc.gdrive_file_url || doc.file;
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
+    } else {
+      toast.error('No file available to view');
+    }
+  };
+
+  const handleDownloadFile = (doc: Document) => {
+    const fileUrl = doc.file_url || doc.gdrive_file_url || doc.file;
+    if (fileUrl) {
+      // For Google Drive, convert view link to download link
+      let downloadUrl = fileUrl;
+      if (fileUrl.includes('drive.google.com')) {
+        // Convert from /file/d/FILE_ID/view to /uc?export=download&id=FILE_ID
+        const fileIdMatch = fileUrl.match(/\/d\/([^\/]+)/);
+        if (fileIdMatch) {
+          downloadUrl = `https://drive.google.com/uc?export=download&id=${fileIdMatch[1]}`;
+        }
+      }
+      window.open(downloadUrl, '_blank');
+    } else {
+      toast.error('No file available to download');
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6 animate-fade-in">
@@ -113,6 +140,9 @@ const Documents = () => {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
+                      File
+                    </th>
                     {userIsHOD && (
                       <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">
                         Actions
@@ -132,6 +162,28 @@ const Documents = () => {
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={getStatusValue(doc.status)} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewFile(doc)}
+                            className="hover:bg-primary/10"
+                            title="View file"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDownloadFile(doc)}
+                            className="hover:bg-primary/10"
+                            title="Download file"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                       {userIsHOD && (
                         <td className="px-6 py-4">

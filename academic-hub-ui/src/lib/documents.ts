@@ -21,6 +21,11 @@ export interface Document {
     last_name: string;
     role: string;
   };
+  // Google Drive fields
+  gdrive_file_id?: string;
+  gdrive_file_url?: string;
+  file_url?: string;
+  original_filename?: string;
 }
 
 export interface UploadDocumentData {
